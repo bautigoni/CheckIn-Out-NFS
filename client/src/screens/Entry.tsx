@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SECTORS } from '../types';
-// NOTE: Auto-printing is DISABLED in this iteration. The badge printer is
-// still implemented in `printBadge.ts` and the import below is kept so it can
-// be re-enabled later by uncommenting the call in handleSubmit().
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { SECTORS, type Visitor } from '../types';
 import { printBadge } from '../printBadge';
 
 export default function Entry() {
@@ -15,7 +11,7 @@ export default function Entry() {
   const [cameraError, setCameraError] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState(false);
+  const [registeredVisitor, setRegisteredVisitor] = useState<Visitor | null>(null);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -113,6 +109,18 @@ export default function Entry() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Save failed');
+      const data = (await res.json()) as { visitor?: Visitor };
+      const visitor = data.visitor ?? {
+        id: Date.now(),
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        dni: payload.dni,
+        sector: payload.sector,
+        photoBase64: photo || null,
+        entryTime: new Date().toISOString(),
+        exitTime: null,
+        createdAt: new Date().toISOString(),
+      };
 
       // ---------------------------------------------------------------
       // BADGE PRINTING — disabled in this iteration.
@@ -127,9 +135,8 @@ export default function Entry() {
       // ---------------------------------------------------------------
 
       stopCamera();
-      setSuccess(true);
-      // Brief success message, then return to home.
-      window.setTimeout(() => navigate('/', { replace: true }), 1600);
+      setRegisteredVisitor(visitor);
+      setSubmitting(false);
     } catch (err) {
       console.error(err);
       setError('Error al guardar. Intente de nuevo.');
@@ -137,14 +144,57 @@ export default function Entry() {
     }
   }
 
-  if (success) {
+  function finishWithoutPrint() {
+    setFirstName('');
+    setLastName('');
+    setDni('');
+    setSector(SECTORS[0]);
+    setRegisteredVisitor(null);
+    stopCamera();
+    navigate('/', { replace: true });
+  }
+
+  function handlePrintBadge() {
+    if (!registeredVisitor) return;
+    try {
+      printBadge({
+        firstName: registeredVisitor.firstName,
+        lastName: registeredVisitor.lastName,
+        dni: registeredVisitor.dni,
+        sector: registeredVisitor.sector,
+        photo: registeredVisitor.photoBase64 ?? '',
+        entryTime: registeredVisitor.entryTime,
+      });
+    } catch (err) {
+      console.warn('Print error:', err);
+    }
+    window.setTimeout(() => navigate('/', { replace: true }), 900);
+  }
+
+  if (registeredVisitor) {
     return (
-      <div className="screen success-screen">
-        <div className="success-card">
-          <div className="success-icon">
+      <div className="screen success-screen entry-confirm-screen">
+        <div className="success-card entry-confirm-card">
+          <div className="success-icon entry-confirm-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 12.5l4.5 4.5L19 7" />
             </svg>
+          </div>
+          <div className="entry-confirm-copy">
+            <h1>Registro realizado correctamente</h1>
+            <p>
+              {registeredVisitor.firstName} {registeredVisitor.lastName}
+              <span>Entrada guardada. Selecciona como finalizar el registro.</span>
+            </p>
+          </div>
+          <div className="entry-confirm-actions">
+            <button className="print-primary-btn" type="button" onClick={handlePrintBadge}>
+              <PrinterIcon />
+              <span>Imprimir credencial</span>
+            </button>
+            <button className="finish-secondary-btn" type="button" onClick={finishWithoutPrint}>
+              Finalizar sin imprimir
+            </button>
           </div>
           <p className="success-msg">¡Entrada registrada!<br />Entry registered</p>
         </div>
@@ -212,10 +262,31 @@ export default function Entry() {
 
         {error && <div className="form-error">{error}</div>}
 
-        <button className="submit-btn" type="submit" disabled={submitting}>
+        <div className="form-actions">
+          <button className="submit-btn" type="submit" disabled={submitting}>
           {submitting ? 'Guardando…' : 'Registrar / Register'}
-        </button>
+          </button>
+
+          <button className="print-secondary-btn" type="button" disabled>
+            <PrinterIcon />
+            <span className="print-secondary-copy">
+              <span>Imprimir credencial de visitante</span>
+              <span>Disponible luego del registro</span>
+            </span>
+          </button>
+        </div>
       </form>
     </div>
+  );
+}
+
+function PrinterIcon() {
+  return (
+    <svg className="print-secondary-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 8V4h10v4" />
+      <path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
+      <path d="M7 14h10v6H7z" />
+      <path d="M18 12h.01" />
+    </svg>
   );
 }

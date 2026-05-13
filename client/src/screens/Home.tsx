@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 /**
  * Home (kiosk landing).
  *
- *   - Logos in top corners
- *   - "Welcome / Bienvenido" title at top, centered between logos
- *   - Subtle SVG network in the bottom-left, fading toward upper-right (does NOT cover buttons)
- *   - Two circular buttons centered in the viewport: ENTRY (orange) on the left, EXIT (green) slightly lower on the right
+ *   - Northfield brand at the top-right
+ *   - "Welcome / Bienvenido" title centered above two action cards
+ *   - Red Itinere brand as a quiet footer mark
+ *   - Subtle SVG network in the background
  *
  * Hidden admin entry: 5 quick taps on the left logo → /admin/login.
  */
@@ -30,55 +30,69 @@ export default function Home() {
     <div className="screen home">
       <NetworkBg />
 
-      <header className="logos">
-        <img
-          src="/logo-left.png"
-          alt="info"
-          className="logo logo-small"
-          onClick={handleLogoTap}
-          onError={hideOnErr}
-        />
+      <header className="home-institution-header">
         <img
           src="/logo-right.png"
           alt="Northfield"
-          className="logo"
+          className="home-logo home-logo-northfield"
           onError={hideOnErr}
         />
       </header>
 
-      <div className="home-title-wrapper">
-        <h1 className="home-title">
-          <span className="home-title-main">Welcome</span>
-          <span className="home-title-accent" aria-hidden="true" />
-          <span className="home-title-sub">Bienvenido/a</span>
-        </h1>
-      </div>
+      <main className="home-content" aria-label="Registro de visitantes">
+        <div className="home-title-wrapper">
+          <h1 className="home-title">
+            <span className="home-title-main">Welcome</span>
+            <span className="home-title-accent" aria-hidden="true" />
+            <span className="home-title-sub">Bienvenido/a</span>
+          </h1>
+        </div>
 
-      <div className="home-buttons-wrap">
-        <button
-          className="card-btn card-btn-entry"
-          onClick={() => navigate('/entry')}
-          aria-label="Check in / Entrada"
-        >
-          <span className="card-btn-bubble">
-            <EntryIcon />
-          </span>
-          <span className="card-btn-label">Check in</span>
-          <span className="card-btn-sublabel">Entrada</span>
-        </button>
+        <div className="home-buttons-wrap">
+          <button
+            className="card-btn card-btn-entry"
+            onClick={() => navigate('/entry')}
+            aria-label="Check in / Entrada"
+          >
+            <span className="card-btn-accent" aria-hidden="true" />
+            <span className="card-btn-bubble">
+              <EntryIcon />
+            </span>
+            <span className="card-btn-copy">
+              <span className="card-btn-label">Check in</span>
+              <span className="card-btn-sublabel">Entrada</span>
+            </span>
+          </button>
 
-        <button
-          className="card-btn card-btn-exit"
-          onClick={() => navigate('/exit')}
-          aria-label="Check out / Salida"
-        >
-          <span className="card-btn-bubble">
-            <ExitIcon />
-          </span>
-          <span className="card-btn-label">Check out</span>
-          <span className="card-btn-sublabel">Salida</span>
-        </button>
-      </div>
+          <button
+            className="card-btn card-btn-exit"
+            onClick={() => navigate('/exit')}
+            aria-label="Check out / Salida"
+          >
+            <span className="card-btn-accent" aria-hidden="true" />
+            <span className="card-btn-bubble">
+              <ExitIcon />
+            </span>
+            <span className="card-btn-copy">
+              <span className="card-btn-label">Check out</span>
+              <span className="card-btn-sublabel">Salida</span>
+            </span>
+          </button>
+        </div>
+      </main>
+
+      <footer className="home-footer-brand" onClick={handleLogoTap} aria-label="Red Itinere">
+        <img
+          src="/logo-left.png"
+          alt=""
+          className="home-logo-red"
+          onError={hideOnErr}
+        />
+        <span className="home-footer-copy">
+          <span className="home-footer-name">Red Itínere</span>
+          <span className="home-footer-sub">Red educativa</span>
+        </span>
+      </footer>
     </div>
   );
 }
@@ -133,7 +147,7 @@ function NetworkBg() {
       </defs>
 
       <g mask="url(#hn-mask)">
-        <g stroke="#d4d8dd" strokeWidth="1">
+        <g stroke="#c5ccd4" strokeWidth="1.15">
           {EDGES.map(([a, b], i) => (
             <line
               key={i}
@@ -142,9 +156,9 @@ function NetworkBg() {
             />
           ))}
         </g>
-        <g fill="#a8aeb4">
+        <g fill="#8f99a6">
           {NODES.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r={3.5} />
+            <circle key={i} cx={x} cy={y} r={3.8} />
           ))}
         </g>
       </g>
