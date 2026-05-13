@@ -1,0 +1,12 @@
+Coloque estos archivos en esta carpeta (client/public/):
+
+  logo-left.png    - logo Northfield (escudo)
+  logo-right.png   - icono "i" (información)
+  background.png   - template con los puntos de colores
+
+Los botones de ENTRADA y SALIDA se ubican automáticamente sobre los
+puntos naranja y verde de la imagen background.png.
+
+Si quiere afinar la posición de los botones, edite los valores
+left/top en client/src/screens/Home.tsx (líneas con "dot-btn-entry"
+y "dot-btn-exit").
