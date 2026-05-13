@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Proyecto Entrada — v1.1
 
 App de registro de visitantes tipo kiosco con **base de datos SQLite** y **dashboard administrativo protegido**.
@@ -186,3 +187,6 @@ npm start     # arranca el backend compilado; servir client/dist por separado
 - **Falla de impresión no bloquea** — el `INSERT` ya se hizo antes de abrir la ventana de impresión.
 - **Dashboard auto-refresca cada 30 s.**
 - **El auto-reset está deshabilitado en el dashboard** (requisito explícito).
+=======
+# CheckIn-Out-NFS
+>>>>>>> 5dea1d5df820d5bb7b4b9a54176f748c38648798
