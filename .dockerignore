@@ -1,0 +1,15 @@
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+server/dist
+server/data
+server/uploads
+server/*.db
+server/*.db-*
+.git
+.env
+*.log
+npm-debug.log*
+Dockerfile
+docker-compose.override.yml

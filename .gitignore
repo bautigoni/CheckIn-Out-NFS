@@ -3,9 +3,9 @@ dist/
 *.log
 .DS_Store
 .env
+server/data/
+server/uploads/
 server/visitors.db
 server/visitors.db-journal
 server/visitors.db-shm
 server/visitors.db-wal
-node_modules/
-.env

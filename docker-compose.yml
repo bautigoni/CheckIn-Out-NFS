@@ -1,0 +1,57 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - server
+    networks:
+      - app_net
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_PATH: ${DATABASE_PATH:-/app/data/visitors.db}
+      UPLOADS_DIR: ${UPLOADS_DIR:-/app/uploads}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-cambiar-esta-password}
+      SESSION_SECRET: ${SESSION_SECRET:-cambiar-este-secreto}
+    volumes:
+      - ./server/data:/app/data
+      - ./server/uploads:/app/uploads
+    expose:
+      - "3001"
+    networks:
+      - app_net
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - client
+      - server
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

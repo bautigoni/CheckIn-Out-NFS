@@ -1,192 +1,260 @@
-<<<<<<< HEAD
-# Proyecto Entrada — v1.1
-
-App de registro de visitantes tipo kiosco con **base de datos SQLite** y **dashboard administrativo protegido**.
-
-- **Frontend:** React + TypeScript (Vite) + react-router-dom
-- **Backend:** Node.js + Express + TypeScript + better-sqlite3
-- **Sin librerías de UI** — CSS plano
-- **npm workspaces** — un solo `npm install` instala todo
-
-## Estructura
-
-```
-ProyectoEntrada/
-├── package.json             # workspaces root
-├── client/
-│   ├── package.json
-│   ├── index.html
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   ├── public/              # logos + background.png
-│   └── src/
-│       ├── App.tsx          # rutas (BrowserRouter)
-│       ├── main.tsx
-│       ├── types.ts
-│       ├── printBadge.ts
-│       ├── styles.css
-│       ├── hooks/useAutoReset.ts
-│       ├── lib/auth.ts      # cliente: token admin en localStorage
-│       └── screens/
-│           ├── Home.tsx              # kiosk landing
-│           ├── Entry.tsx             # /entry
-│           ├── Exit.tsx              # /exit
-│           ├── AdminLogin.tsx        # /admin/login
-│           └── AdminDashboard.tsx    # /admin/dashboard (protegido)
-└── server/
-    ├── package.json
-    ├── tsconfig.json
-    └── src/
-        ├── server.ts        # endpoints REST
-        ├── db.ts            # SQLite + schema auto-creado
-        ├── auth.ts          # token derivado de credenciales + middleware
-        └── config.ts        # PORT, ADMIN_USER, ADMIN_PASSWORD, ADMIN_TOKEN_SALT
-```
-
-> El archivo `server/visitors.db` se crea automáticamente la primera vez que arranca el backend. Está incluido en `.gitignore`.
-
-## Cómo correr (paso a paso, PowerShell Windows)
-
-### Opción A — una sola terminal (recomendado)
-
-```powershell
-cd D:\Descargas\ProyectoEntrada
-npm install
-npm run dev
-```
-
-Esto:
-
-1. Instala dependencias del root, del `client` y del `server` (workspaces).
-2. Levanta **backend en http://localhost:4000** y **frontend en http://localhost:5173** en paralelo.
-
-Abrir http://localhost:5173 en Chrome/Edge.
-
-### Opción B — dos terminales separadas
-
-Terminal 1 (backend):
-
-```powershell
-cd D:\Descargas\ProyectoEntrada\server
-npm install
-npm run dev
-```
-
-Terminal 2 (frontend):
-
-```powershell
-cd D:\Descargas\ProyectoEntrada\client
-npm install
-npm run dev
-```
-
-## Requisitos
-
-- **Node.js 18+** (recomendado 20+; verificar con `node -v`)
-- **npm 8+** (`npm -v`)
-- **Windows / build tools** — `better-sqlite3` viene con binarios pre-compilados para Windows + Node 18-22, no requiere compilación manual.
-
-Si por algún motivo falla al compilar `better-sqlite3`, instalar Build Tools de Visual Studio:
-`npm install --global windows-build-tools` (raro de necesitar con Node ≥20).
-
-## Imágenes (poner antes de probar)
-
-Copiar en `client/public/`:
-
-- `logo-left.png` — escudo Northfield (esquina superior izquierda; toque 5 veces para abrir el login admin)
-- `logo-right.png` — icono "i" (esquina superior derecha)
-- `background.png` — template con líneas/nodos (zona superior-media del home)
-
-## Rutas
-
-### Públicas (kiosco)
-
-- `/` — Home: botones ENTRY (naranja) y EXIT (verde)
-- `/entry` — formulario de entrada + cámara + impresión de credencial
-- `/exit` — formulario de salida (busca la última entrada abierta)
-
-**Auto-reset:** después de 7 s de inactividad en `/entry` o `/exit` vuelve a `/`. El auto-reset **no aplica en `/admin/*`**.
-
-### Administrativas (protegidas)
-
-- `/admin/login` — login (no enlazado desde el kiosco; se accede tocando 5 veces el logo izquierdo o tipeando la URL)
-- `/admin/dashboard` — visitantes actuales, contadores del día, total histórico, gráfico de los últimos 7 días, movimientos recientes, histórico filtrable por fecha y sector
-
-## Credenciales admin (por defecto)
-
-- **Usuario:** `admin`
-- **Contraseña:** `admin123`
-
-Para cambiarlas, editar `server/src/config.ts` o exportar variables de entorno antes de arrancar:
-
-```powershell
-$env:ADMIN_USER="otro"
-$env:ADMIN_PASSWORD="otra-clave"
-$env:ADMIN_TOKEN_SALT="cadena-aleatoria-larga"
-npm run dev
-```
-
-> Al cambiar `ADMIN_TOKEN_SALT` se invalidan las sesiones existentes (el cliente deberá volver a loguearse).
-
-## API
-
-### Kiosko (público)
-
-- `POST /api/entry` — body `{ firstName, lastName, dni, sector, photo }`
-- `POST /api/exit` — body `{ firstName, lastName }`
-
-### Admin (requiere `Authorization: Bearer <token>`)
-
-- `POST /api/admin/login` — body `{ user, password }` → `{ token }`
-- `GET  /api/admin/verify`
-- `GET  /api/admin/stats` — contadores + últimos 7 días
-- `GET  /api/admin/current-visitors`
-- `GET  /api/admin/recent-movements?limit=20`
-- `GET  /api/admin/history?from=YYYY-MM-DD&to=YYYY-MM-DD&sector=Dirección`
-
-El dev server de Vite proxea `/api/*` a `http://localhost:4000`, así que el frontend no necesita `.env`.
-
-## Esquema de base de datos
-
-Tabla `visitors` (creada automáticamente al iniciar el backend):
-
-```sql
-CREATE TABLE visitors (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  firstName    TEXT NOT NULL,
-  lastName     TEXT NOT NULL,
-  dni          TEXT NOT NULL,
-  sector       TEXT NOT NULL,
-  photoBase64  TEXT,
-  entryTime    TEXT NOT NULL,   -- ISO 8601
-  exitTime     TEXT,            -- NULL mientras está dentro
-  createdAt    TEXT NOT NULL DEFAULT (datetime('now'))
-);
-```
-
-Un registro con `exitTime IS NULL` representa un visitante actualmente adentro. La salida actualiza ese mismo registro (no inserta uno nuevo).
-
-## Build de producción
-
-```powershell
-cd D:\Descargas\ProyectoEntrada
-npm run build
-npm start     # arranca el backend compilado; servir client/dist por separado
-```
-
-## Tips para uso como kiosco
-
-- Chrome con `--kiosk http://localhost:5173 --autoplay-policy=no-user-gesture-required`. Dar permiso de cámara una vez.
-- Configurar la impresora de credenciales como **impresora predeterminada del sistema**.
-- Acceso al admin: tocar el **logo izquierdo 5 veces seguidas** (dentro de 1.5 s) abre `/admin/login`. Idea: cambiar el shortcut o agregar una contraseña adicional si querés más seguridad.
-- Deshabilitar atajos de navegador y protector de pantalla.
-
-## Funcionalidad clave
-
-- **Falla de cámara no bloquea** — el registro se guarda sin foto.
-- **Falla de impresión no bloquea** — el `INSERT` ya se hizo antes de abrir la ventana de impresión.
-- **Dashboard auto-refresca cada 30 s.**
-- **El auto-reset está deshabilitado en el dashboard** (requisito explícito).
-=======
 # CheckIn-Out-NFS
->>>>>>> 5dea1d5df820d5bb7b4b9a54176f748c38648798
+
+App MVP de registro de visitantes para recepcion escolar, con frontend React + TypeScript + Vite, backend Node.js + Express + TypeScript, SQLite local persistente, dashboard admin protegido, camara y credencial de visitante con impresion manual luego del registro.
+
+Produccion esperada:
+
+- Dominio DuckDNS: `checkinout.duckdns.org`
+- IP local del servidor Ubuntu: `192.168.0.35`
+- URL publica: `https://checkinout.duckdns.org`
+
+## Stack Docker
+
+El servidor solo necesita Docker y Docker Compose.
+
+Servicios:
+
+- `client`: compila React/Vite y sirve `dist` con nginx.
+- `server`: API Node/Express en `0.0.0.0:3001`.
+- `caddy`: reverse proxy publico con HTTPS automatico.
+
+Solo Caddy publica puertos al host:
+
+- `80:80`
+- `443:443`
+
+El backend no se expone directo a internet. Caddy lo alcanza por la red interna Docker como `server:3001`.
+
+## Archivos de despliegue
+
+- `docker-compose.yml`
+- `Caddyfile`
+- `client/Dockerfile`
+- `client/nginx.conf`
+- `server/Dockerfile`
+- `.dockerignore`
+- `.env.example`
+
+## Instalar Docker en Ubuntu
+
+```bash
+sudo apt update
+sudo apt install docker.io docker-compose-plugin -y
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER
+```
+
+Cerrar sesion y volver a entrar para que el grupo `docker` aplique.
+
+## Clonar repo
+
+```bash
+git clone URL_DEL_REPO
+cd NOMBRE_DEL_REPO
+```
+
+## Crear `.env`
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Cambiar en produccion:
+
+```env
+ADMIN_USER=admin
+ADMIN_PASSWORD=cambiar-esta-password
+SESSION_SECRET=cambiar-este-secreto-largo-y-aleatorio
+```
+
+No usar `admin/admin123` ni passwords simples en produccion.
+
+## Levantar la app
+
+```bash
+docker compose up -d --build
+```
+
+Abrir:
+
+```text
+https://checkinout.duckdns.org
+```
+
+## Ver logs
+
+```bash
+docker compose logs -f
+```
+
+Logs por servicio:
+
+```bash
+docker compose logs -f caddy
+docker compose logs -f server
+docker compose logs -f client
+```
+
+## Apagar
+
+```bash
+docker compose down
+```
+
+Esto no borra la base SQLite porque vive en `./server/data`.
+
+## Actualizar
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+## DuckDNS y router
+
+En DuckDNS, el dominio debe apuntar a la IP publica de tu conexion.
+
+En el router hay que redirigir puertos hacia el servidor Ubuntu:
+
+```text
+80  -> 192.168.0.35:80
+443 -> 192.168.0.35:443
+```
+
+Conviene reservar la IP `192.168.0.35` en el router para que el servidor no cambie de direccion local.
+
+## HTTPS con Caddy
+
+El `Caddyfile` incluido:
+
+```caddyfile
+checkinout.duckdns.org {
+    reverse_proxy /api/* server:3001
+    reverse_proxy client:80
+}
+```
+
+Caddy escucha en 80/443, solicita y renueva certificados HTTPS automaticamente para `checkinout.duckdns.org`.
+
+Para que HTTPS funcione:
+
+- DuckDNS debe resolver hacia tu IP publica.
+- El router debe reenviar 80 y 443 a `192.168.0.35`.
+- El firewall del servidor debe permitir 80 y 443.
+
+## Frontend y rutas SPA
+
+El frontend usa rutas relativas:
+
+- `/api/entry`
+- `/api/exit`
+- `/api/admin/...`
+
+No usa `http://localhost:3001` en produccion.
+
+Las rutas SPA como `/admin/login` y `/admin/dashboard` funcionan porque nginx usa:
+
+```nginx
+try_files $uri $uri/ /index.html;
+```
+
+## Backend
+
+Variables usadas por el backend:
+
+```env
+NODE_ENV=production
+PORT=3001
+DATABASE_PATH=/app/data/visitors.db
+UPLOADS_DIR=/app/uploads
+ADMIN_USER=admin
+ADMIN_PASSWORD=cambiar-esta-password
+SESSION_SECRET=cambiar-este-secreto-largo-y-aleatorio
+```
+
+El backend escucha en `0.0.0.0` dentro del contenedor.
+
+## SQLite persistente
+
+La base se guarda en:
+
+```text
+./server/data:/app/data
+```
+
+Archivo dentro del contenedor:
+
+```text
+/app/data/visitors.db
+```
+
+Si se reinicia o reconstruye Docker, la base se conserva.
+
+Si en el futuro se usan archivos/fotos en disco, el volumen preparado es:
+
+```text
+./server/uploads:/app/uploads
+```
+
+## Seguridad
+
+- Cambiar `ADMIN_USER`, `ADMIN_PASSWORD` y `SESSION_SECRET` antes de publicar.
+- No dejar `admin/admin123` en produccion.
+- No exponer el backend directo al host ni a internet.
+- El dashboard y endpoints admin requieren login/token.
+- No mostrar datos sensibles sin login.
+- Mantener actualizado el servidor Ubuntu y Docker.
+
+## Uso de la app
+
+Rutas publicas:
+
+- `/`: HOME de kiosco.
+- `/entry`: registro de entrada, camara y opcion de imprimir credencial luego del guardado.
+- `/exit`: registro de salida.
+
+Rutas admin:
+
+- `/admin/login`
+- `/admin/dashboard`
+
+Auto reset:
+
+- Vuelve a HOME luego de 7 segundos de inactividad en pantallas publicas.
+- No aplica al dashboard admin.
+
+Camara:
+
+- `navigator.mediaDevices.getUserMedia` requiere contexto seguro.
+- En produccion, usar `https://checkinout.duckdns.org`.
+- Si la camara falla o no tiene permiso, el registro se guarda sin foto.
+
+Impresion:
+
+- La credencial no se imprime automaticamente al registrar.
+- Luego de guardar una entrada, aparece la confirmacion con:
+  - `Imprimir credencial`
+  - `Finalizar sin imprimir`
+- La impresion manual usa la credencial del registro recien guardado.
+
+## Desarrollo local sin Docker
+
+```bash
+npm install
+npm run dev
+```
+
+Frontend:
+
+```text
+http://localhost:5173
+```
+
+Backend:
+
+```text
+http://localhost:4000
+```
+
+En desarrollo, Vite proxea `/api` al backend local.

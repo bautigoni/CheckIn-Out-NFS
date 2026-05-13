@@ -508,6 +508,6 @@ app.get('/api/admin/dashboard', requireAdmin, (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Visitor kiosk server listening on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Visitor kiosk server listening on port ${PORT}`);
 });
