@@ -49,21 +49,34 @@ export default function Home() {
       <div className="home-title-wrapper">
         <h1 className="home-title">
           <span className="home-title-main">Welcome</span>
+          <span className="home-title-accent" aria-hidden="true" />
           <span className="home-title-sub">Bienvenido/a</span>
         </h1>
       </div>
 
       <div className="home-buttons-wrap">
-        <button className="big-btn big-btn-entry" onClick={() => navigate('/entry')}>
-          <EntryIcon />
-          <span className="big-btn-en">Check in</span>
-          <span className="big-btn-es">Entrada</span>
+        <button
+          className="card-btn card-btn-entry"
+          onClick={() => navigate('/entry')}
+          aria-label="Check in / Entrada"
+        >
+          <span className="card-btn-bubble">
+            <EntryIcon />
+          </span>
+          <span className="card-btn-label">Check in</span>
+          <span className="card-btn-sublabel">Entrada</span>
         </button>
 
-        <button className="big-btn big-btn-exit" onClick={() => navigate('/exit')}>
-          <ExitIcon />
-          <span className="big-btn-en">Check out</span>
-          <span className="big-btn-es">Salida</span>
+        <button
+          className="card-btn card-btn-exit"
+          onClick={() => navigate('/exit')}
+          aria-label="Check out / Salida"
+        >
+          <span className="card-btn-bubble">
+            <ExitIcon />
+          </span>
+          <span className="card-btn-label">Check out</span>
+          <span className="card-btn-sublabel">Salida</span>
         </button>
       </div>
     </div>
@@ -145,7 +158,7 @@ function NetworkBg() {
 
 function EntryIcon() {
   return (
-    <svg className="big-btn-icon" viewBox="0 0 64 64" aria-hidden="true">
+    <svg className="card-btn-icon" viewBox="0 0 64 64" aria-hidden="true">
       {/* door frame on the right, opening leftward */}
       <path d="M40 12 H52 V52 H40" />
       {/* arrow pointing INTO the door */}
@@ -157,7 +170,7 @@ function EntryIcon() {
 
 function ExitIcon() {
   return (
-    <svg className="big-btn-icon" viewBox="0 0 64 64" aria-hidden="true">
+    <svg className="card-btn-icon" viewBox="0 0 64 64" aria-hidden="true">
       {/* door frame on the left, opening rightward */}
       <path d="M24 12 H12 V52 H24" />
       {/* arrow pointing OUT of the door */}
