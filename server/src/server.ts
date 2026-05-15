@@ -229,7 +229,7 @@ app.get('/api/admin/history', requireAdmin, (req, res) => {
 // ============================================================
 
 const ALL_SECTORS = [
-  'Dirección',
+  'Dirección de Sede',
   'Nivel Inicial',
   'Nivel Primario',
   'Tecnología',

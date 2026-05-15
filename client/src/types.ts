@@ -1,5 +1,5 @@
 export const SECTORS = [
-  'Dirección',
+  'Dirección de Sede',
   'Nivel Inicial',
   'Nivel Primario',
   'Tecnología',
